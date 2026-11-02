@@ -64,7 +64,7 @@ Mod da verificare: 0
 
 ### CurseForge API - Solo per fallback mod UNKNOWN
 
-1. Vai su [https://app.curseforge.com/api](https://app.curseforge.com/api)
+1. Vai su [https://app.curseforge.com/api](https://console.curseforge.com/#/api-keys)
 2. Crea una **Personal Access Token**
 3. Imposta come variabile d'ambiente (più sicuro):
 
