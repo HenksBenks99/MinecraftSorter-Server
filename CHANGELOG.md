@@ -2,6 +2,24 @@
 
 Tutti i cambiamenti importanti per questo progetto sono documentati in questo file.
 
+## [4.0.0] - 2026-11-02
+
+### Refactor Completo (Breaking: nuovo entry point)
+
+- **Nuovo entry point**: `separate_mods.py` (~70 linee) - sostituisce `forge_mod_separation.py` (45KB, 1050+ linee)
+- **Rimosso codice duplicato/morto**: 13 file eliminati (`forge_mod_separation.py`, `forge_mod_separation_refactored.py`, `testapicurse.py`, `curseforge_checker.py`, `compare_mods.py`, `config.example.py`, 8 file `test_*.py`)
+- **API key CurseForge**: Ora **solo** da variabile d'ambiente `CURSEFORGE_API_KEY` (rimossa da `config.py` e codice)
+- **Override map centralizzata**: `SERVER_SIDE_FORCE_INCLUDE` in `config.py` con commenti per ogni mod
+- **Architettura pulita**: `mod_parser.py` (parsing statico) + `config.py` (config) + `separate_mods.py` (logica)
+- **Funziona offline**: Zero dipendenze esterne, parsing deterministico
+- **Rimosso**: `lib/` (package vuoto), `cf_cache.json`, `__pycache__/`
+
+### Sicurezza
+- **Nessuna API key nel codice** - se era nella history Git, **revocala e rigenerala** su curseforge.com
+- `.gitignore` protegge: `config.py`, `cf_cache.json`, `*.env`, `mods/`, `*.jar`
+
+---
+
 ## [4.1.1] - 2026-10-30
 
 ### Sicurezza

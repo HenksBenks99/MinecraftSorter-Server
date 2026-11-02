@@ -4,7 +4,7 @@
 
 ## 🔍 Identifica e separa mod Client-Only dalle mod Server-Ready per Minecraft modpacks
 
-**ForgeModSearch v4.1.0** - Parsing del campo `side` + override server-side
+**ForgeModSearch v4.0.0** - Parsing statico metadati JAR + override server-side
 
 </div>
 
@@ -12,364 +12,175 @@
 
 ## 🎯 Caratteristiche Principali
 
-- ✅ **Analisi Statica**: Legge `fabric.mod.json`, `mods.toml`, `neoforge.mods.toml`
-- ✅ **Campo `side` (v4.1.0)**: Usa la chiave ufficiale `side` di Forge/NeoForge, non `displayTest`
-- ✅ **Override Server-Side**: Librerie/API critiche (`kotlinforforge`, `jei`, `ferritecore`, `connector`, ...) forzate lato server
-- ✅ **API Modrinth** (Prioritaria): Verifica online tramite [api.modrinth.com](https://api.modrinth.com)
-- ✅ **API CurseForge** (Fallback Automatico): Verifica tramite [api.curseforge.com](https://api.curseforge.com)
-- ✅ **Whitelist BOTH**: Mod note classificate come BOTH anche se `client_side=required`
-- ✅ **Cache Locale**: Memorizza i risultati per evitare chiamate API duplicate
-- ✅ **Gestione Errori Robusta**: Timeout, retry, fallback automatico
-
----
-
-## 🆕 v4.1.0 - Nuova pipeline di classificazione
-
-Due nuovi moduli affiancano lo script principale:
-
-| File | Ruolo |
-|------|-------|
-| `mod_parser.py` | Estrae i metadati interni dei jar e restituisce il lato reale (`client` / `server` / `both` / `unknown`) leggendo `side` in `[[mods]]` (Forge/NeoForge) o `environment` (Fabric) |
-| `forge_mod_separation_refactored.py` | Applica la mappa `SERVER_SIDE_FORCE_INCLUDE` e copia le mod server-ready in `mods/Server_Ready` |
-
-> ⚠️ **Perché è importante**: `displayTest` non indica il lato della mod, ma solo il comportamento del match client/server in multiplayer. Usare `side` elimina i falsi positivi che causavano crash all'avvio del server.
-
-```bash
-# Nuova pipeline (v4.1.0)
-python forge_mod_separation_refactored.py --input ./mods/mods-corrected --output ./mods/Server_Ready
-```
+- ✅ **Analisi Statica Veloce**: Legge `fabric.mod.json`, `mods.toml`, `neoforge.mods.toml` dai file `.jar`
+- ✅ **Campo `side` Ufficiale**: Usa la chiave `side` di Forge/NeoForge (non `displayTest` deprecato)
+- ✅ **Override Server-Side**: Librerie/API critiche forzate lato server (`jei`, `ferritecore`, `kotlinforforge`, `journeymap`, `connector`, ...)
+- ✅ **Zero Dipendenze Esterne**: Funziona **completamente offline** (Python 3.11+ nativo)
+- ✅ **API Key Opzionale**: CurseForge solo come fallback per mod `UNKNOWN` (via env var)
+- ✅ **Sicuro**: Nessuna API key hardcoded - `.gitignore` protegge `config.py`
 
 ---
 
 ## 📦 Requisiti
 
-- **Python 3.8+**
-- **Python 3.11+ consigliato** (per supporto `tomllib`)
-
-### Installazione
+- **Python 3.11+** (usa `tomllib` nativo)
+- **Python 3.8-3.10**: `pip install tomli`
 
 ```bash
-# Python 3.11+ (nativo)
+# Verifica versione
 python --version
-
-# Python 3.8-3.10 (usa tomli)
-pip install tomli
 ```
 
 ---
 
 ## 🚀 Uso Rapido
 
-### Analisi di base
-
 ```bash
-python forge_mod_separation.py ./mods --output ./mods
+# Analizza mod in mods-corrected, copia server-ready in Server_Ready
+python separate_mods.py --input ./mods/mods-corrected --output ./mods/Server_Ready
+
+# Dry-run (solo analisi, nessuna copia)
+python separate_mods.py --input ./mods/mods-corrected --output ./mods/Server_Ready --dry-run
 ```
 
-### Dry-run (solo analisi, senza copia)
-
-```bash
-python forge_mod_separation.py ./mods --output ./mods --dry-run
+**Output esempio:**
 ```
-
-### Solo lista delle mod
-
-```bash
-python forge_mod_separation.py ./mods --output ./mods --list-only
-```
-
-### Clear cache
-
-```bash
-python forge_mod_separation.py ./mods --output ./mods --clear-cache
-```
-
-### Mostra cache
-
-```bash
-python forge_mod_separation.py ./mods --output ./mods --show-cache
+Analisi mod in: mods\mods-corrected
+Destinazione server: mods\Server_Ready
+[SERVER] jei-1.20.1-forge-15.20.0.112.jar
+[INFO] Override: jei-1.20.1-forge-15.20.0.112.jar forzato a SERVER (libreria API necessaria)
+[SERVER] create-1.20.1-6.0.8.jar
+[CLIENT] sodium-1.20.1.jar
+...
+--- ANALISI COMPLETATA ---
+Mod Server-Ready copiate: 209
+Mod Client-Only ignorate: 12
+Mod da verificare: 0
 ```
 
 ---
 
-## ⚙️ Configurazione API
+## ⚙️ Configurazione API (Opzionale)
 
-### Modrinth API (Prioritaria)
-
-L'API Modrinth **non richiede autenticazione**:
-
-```python
-MODRINTH_BASE_URL = "https://api.modrinth.com/v2/project"
-MODRINTH_HEADERS = {
-    'User-Agent': 'ForgeModSearch/3.5.0 (Riccardo.Contatto.GitHub)',
-}
-```
-
-**Importante**: Il header `User-Agent` è obbligatorio per evitare i rate limit!
-
-### CurseForge API (Fallback Automatico - Opzionale)
-
-Per abilitare il fallback automatico su CurseForge:
+### CurseForge API - Solo per fallback mod UNKNOWN
 
 1. Vai su [https://app.curseforge.com/api](https://app.curseforge.com/api)
 2. Crea una **Personal Access Token**
-3. Copia la token e inseriscila nel file di configurazione
+3. Imposta come variabile d'ambiente (più sicuro):
 
-#### Opzione 1: File di Configurazione (Consigliato)
+```powershell
+# Windows (PowerShell - persistente)
+[Environment]::SetEnvironmentVariable("CURSEFORGE_API_KEY", "tua_chiave", "User")
 
-Crea un file `config.py` nella stessa directory:
-
-```python
-# config.py
-CURSEFORGE_API_KEY = "la_tua_api_key_qui"
-```
-
-Poi modifica `forge_mod_separation.py`:
-
-```python
-from config import *  # Importa le configurazioni
-```
-
-#### Opzione 2: Variabile d'Ambiente (Più Sicuro)
-
-```bash
-# Windows
-set CURSEFORGE_API_KEY=tua_api_key_qui
+# Windows (CMD - sessione corrente)
+set CURSEFORGE_API_KEY=tua_chiave
 
 # Linux/Mac
-export CURSEFORGE_API_KEY=tua_api_key_qui
+export CURSEFORGE_API_KEY=tua_chiave
 ```
 
-Poi nel codice:
-
-```python
-import os
-CURSEFORGE_API_KEY = os.environ.get('CURSEFORGE_API_KEY')
-```
-
-#### Opzione 3: Hardcoded (Sconsigliato per GitHub)
-
-```python
-# forge_mod_separation.py
-CURSEFORGE_API_KEY = "la_tua_api_key_qui"  # ⚠️ Mai commitare!
-```
+> **Nota**: Il programma funziona **senza API key**. La key serve solo come fallback online per mod non classificate staticamente (`UNKNOWN`). Con l'override map attuale, `UNKNOWN` = 0.
 
 ---
 
 ## 📂 Struttura Progetto
 
 ```
-forge_mod_search/
-├── forge_mod_separation.py    # Script principale
-├── config.example.py           # Template configurazione
-├── .gitignore                  # File da ignorare da Git
-├── README.md                   # Questo file
-├── CHANGELOG.md                # Changelog
-├── testapicurse.py             # Test API CurseForge
-├── test_complete_api.py        # Test completo API
-└── mods/                       # Cartella delle mod
-    ├── mods-corrected/         # Mod validate manualmente
-    └── Server Mod/             # Mod copiate (SERVER_ONLY + BOTH)
+mod-server-sorter/
+├── .gitignore              # Protegge config.py, cache, mods/
+├── CHANGELOG.md            # Storico versioni
+├── config.py               # Config centralizzata (API key SOLO env var)
+├── mod_parser.py           # Parser metadati JAR (Forge/Fabric)
+├── README.md               # Questo file
+├── separate_mods.py        # Entry point principale (~70 linee)
+├── MODRINTH_INTEGRATION.md # Doc API Modrinth (storico)
+└── mods/                   # Tue mod (non versionate)
+    ├── mods-corrected/     # Input: modpack da analizzare
+    └── Server_Ready/       # Output: mod server-side pronte
 ```
 
 ---
 
-## 🔄 Flusso di Lavoro
+## 🔄 Come Funziona
 
-### 1. Analisi Statica (Prima Priorità)
+### 1. Parsing Metadati Interni (Priorità 1)
+Lo script legge **solo file dentro al `.jar`**:
+- **Forge/NeoForge**: `META-INF/mods.toml` / `META-INF/neoforge.mods.toml` → campo `side`
+- **Fabric**: `fabric.mod.json` → campo `environment` + `entrypoints`
 
-Lo script legge prima i file di configurazione interni alle mod:
-- `fabric.mod.json`
-- `META-INF/mods.toml`
-- `META-INF/neoforge.mods.toml`
+### 2. Override Map (Priorità 2 - Forza Server)
+Da `config.py` - `SERVER_SIDE_FORCE_INCLUDE`:
+| Mod | Motivo |
+|-----|--------|
+| `jei` | API integrazione item lato server |
+| `ferritecore` | Ottimizzazione memoria fondamentale |
+| `journeymap` | Fornisce dati API al server |
+| `kotlinforforge` | Libreria necessaria a mod server-side |
+| `connector` | Bridge Fabric→Forge |
+| `tconjei`, `appleskin`, `searchables`, `polymorph` | API/integrazioni server |
 
-### 2. Verifica Online Modrinth (Prioritaria)
-
-Se l'analisi statica restituisce `UNKNOWN` o fiducia < 90%:
-- Chiamata API Modrinth: `GET /v2/project/{slug}`
-- Classificazione basata su `client_side` e `server_side`
-
-### 3. Fallback CurseForge (Automatico)
-
-Se Modrinth non trova la mod (404):
-- Fallback automatico su CurseForge API
-- Classificazione basata sulle categorie
-
-### 4. Whitelist BOTH
-
-Alcune mod note sono classificate come BOTH anche se `client_side=required`:
-- JEI, REI, EMI, Jade, ecc.
-- Librerie come Fabric API, Architectury, ecc.
-
----
-
-## 📊 Output del Report
-
-Il report `mod_analysis_report.txt` include:
-
-```
-======================================================================
-FORGEMODSEARCH - MOD ANALYSIS REPORT v3.5.0
-======================================================================
-
-STATISTICHE
-----------------------------------------------------------------------
-  Mod totali:              244
-  Client-Only:             44
-  Server-Only:             2
-  Both (Client+Server):     197
-  Unknown:                 1
-  Modrinth Checked:        34
-  Modrinth Found:          34
-  Static Only:             210
-
-DETAILED LIST
-----------------------------------------------------------------------
-
-[BOTH]
-  Mod: additional_lights-1.20.1-2.1.7
-  Percorso: mods/additional_lights-1.20.1-2.1.7.jar
-  Motivo: CurseForge: mod server-ready (non client-only)
-  Affidabilità: 85%
-  Fonte: CURSEFORGE
-  CurseForge Title: Additional Lights
-  CurseForge Slug: additional-lights
-  CurseForge Version: 2.1.7
-```
+### 3. Decisione Finale
+| Risultato Parser | Override | Azione |
+|------------------|----------|--------|
+| `server` / `both` | - | ✅ Copia in `Server_Ready/` |
+| `client` | No | ❌ Ignora (client-only) |
+| `client` | Sì | ✅ Forza `both` → Copia |
+| `unknown` | - | ⚠️ Segnala da verificare |
 
 ---
 
 ## 🛡️ Sicurezza
 
-### ⚠️ NON Commitare mai questi file!
+### File MAI da committare (già in `.gitignore`):
+- `config.py` - Config locale (può contenere override custom)
+- `cf_cache.json` - Cache runtime API
+- `*.env` - Variabili d'ambiente
+- `mods/` - File `.jar` (binari grandi)
 
-- `config.py` - Contiene API key
-- `cf_cache.json` - Cache locale
-- `*.env` - File di ambiente
-
-### Come proteggere le API key
-
-1. **Usa variabili d'ambiente** (più sicuro)
-2. **Usa un file di configurazione separato** (`config.py`)
-3. **Mai hardcoded nel codice** (rischio di esposizione su GitHub)
-
-### .gitignore
-
-Il file `.gitignore` esclude automaticamente:
-- `config.py`
-- `cf_cache.json`
-- `*.env`
-- `*.cache`
+### Best Practice:
+1. **API key solo in env var** - Mai in `config.py` né nel codice
+2. **Non versionare `mods/`** - Usa `.gitignore` (già configurato)
+3. **Rigenera key se esposta** - Su curseforge.com → API settings
 
 ---
 
-## 🔧 Opzioni di Esecuzione
+## 📜 Changelog Principale
 
-### Analisi completa
+| Versione | Cambiamenti |
+|----------|-------------|
+| **v4.0.0** | Refactor completo: rimosso `forge_mod_separation.py` (45KB duplicato), nuovo `separate_mods.py` minimal, API key solo env var, override map centralizzata |
+| **v3.5.0** | Integrazione Modrinth API prioritaria, fallback CurseForge automatico |
+| **v3.2.0** | Parsing `displayTest` + whitelist BOTH |
+| **v1.0.0** | Prima versione - parsing base TOML |
 
-```bash
-python forge_mod_separation.py ./mods --output ./mods
-```
-
-### Dry-run (solo analisi)
-
-```bash
-python forge_mod_separation.py ./mods --output ./mods --dry-run
-```
-
-### Solo lista delle mod
-
-```bash
-python forge_mod_separation.py ./mods --output ./mods --list-only
-```
-
-### Clear cache
-
-```bash
-python forge_mod_separation.py ./mods --output ./mods --clear-cache
-```
-
-### Mostra cache
-
-```bash
-python forge_mod_separation.py ./mods --output ./mods --show-cache
-```
+Vedi [CHANGELOG.md](CHANGELOG.md) per dettagli.
 
 ---
 
-## 📝 Esempio di Output
-
-```
-======================================================================
-  ForgeModSearch - Mod Separation Tool v3.5.0
-======================================================================
-  INTEGRAZIONE MODRINTH MIGLIORATA
-======================================================================
-
-
-Trovati 209 file .jar da analizzare...
-
-  [additional_lights-1.20.1-2.1.7.jar]
-    [BOTH] additional_lights-1.20.1-2.1.7
-    TOML: displayTest="both" o entrambi gli entrypoints
-    Affidabilità: 80%
-
-    [INFO] displayTest="both" con fiducia bassa - uso Modrinth API
-    [INFO] Slug Modrinth: additional-lights
-    [INFO] Chiamata API Modrinth per: additional-lights
-    [WARN] Mod non trovata su Modrinth
-    [INFO] Fallback automatico su CurseForge API...
-    [INFO] CurseForge API: risposta ricevuta
-
-    [BOTH] additional_lights-1.20.1-2.1.7
-    CurseForge: mod server-ready (non client-only)
-    Affidabilità: 85%
-    Fonte: CURSEFORGE
-    CurseForge Title: Additional Lights
-    CurseForge Slug: additional-lights
-    CurseForge Version: 2.1.7
-```
-
----
-
-## 🐛 Debug
-
-### Debug Modrinth
+## 🐛 Debug / Verifica
 
 ```bash
-python test_complete_api.py
+# Test parser singolo file
+python -c "from mod_parser import ModMetadataParser; from pathlib import Path; print(ModMetadataParser.get_jar_metadata(Path('mods/mods-corrected/tua_mod.jar')))"
+
+# Verifica override attivi
+python -c "import config; print('Override:', config.SERVER_SIDE_FORCE_INCLUDE)"
 ```
-
-### Debug CurseForge
-
-```bash
-python testapicurse.py
-```
-
-### Test Journeymap (CLIENT_ONLY)
-
-```bash
-python test_journeymap.py
-```
-
----
-
-## 📜 Licenza
-
-Questo script è fornito come parte del progetto ForgeModSearch.
 
 ---
 
 ## 🤝 Contribuire
 
-Se vuoi contribuire, crea una issue o un pull request!
+1. Fork → branch → PR
+2. Mantieni `separate_mods.py` sotto 100 linee
+3. Nuove override in `config.py` → `SERVER_SIDE_FORCE_INCLUDE` con commento motivo
 
 ---
 
 ## 📞 Contatti
 
-- **GitHub**: [Henks](https://github.com/HenksBenks99)
-- **Email**: tuo_contatto_github
+- **GitHub**: [HenksBenks99](https://github.com/HenksBenks99)
+- **Repo**: https://github.com/HenksBenks99/mod-server-sorter
 
 ---
 
