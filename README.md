@@ -58,6 +58,29 @@ Mod Client-Only ignorate: 12
 Mod da verificare: 0
 ```
 
+## 🖥️ Creazione Eseguibili (.exe)
+
+Per creare eseguibili standalone per CLI e GUI (richiede [PyInstaller](https://pyinstaller.org/)):
+
+1. **Installa PyInstaller**:
+   ```bash
+pip install pyinstaller
+```
+
+2. **Costruisci l'eseguibile CLI**:
+   ```bash
+pyinstaller --onefile --console --name ForgeModSearch_CLI separate_mods.py
+```
+   Trova l'eseguibile in `dist/ForgeModSearch_CLI.exe`.
+
+3. **Costruisci l'eseguibile GUI** (usa `gui.py`):
+   ```bash
+pyinstaller --onefile --windowed --name ForgeModSearch_GUI gui.py
+```
+   Trova l'eseguibile in `dist/ForgeModSearch_GUI.exe`.
+
+> **Nota**: Gli eseguibili includono tutte le dipendenze. Assicurati che `gui.py` e `separate_mods.py` siano aggiornati prima di costruire.
+
 ---
 
 ## ⚙️ Configurazione API (Opzionale)

@@ -232,7 +232,7 @@ def analyze_modpack(input_folder: Path, output_folder: Path, use_api: bool, comp
 
         # Output per mod
         status_tag = f"[{side.upper()}]"
-        ref_tag = " ✓" if in_reference else " ✗" if action == 'COPY' else ""
+        ref_tag = " [OK]" if in_reference else " [X]" if action == 'COPY' else ""
         print(f"  {status_tag:12} {jar_path.name:<60} {reason}{ref_tag}")
 
         if action == 'COPY':
