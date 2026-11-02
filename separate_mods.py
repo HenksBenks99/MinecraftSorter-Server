@@ -201,7 +201,13 @@ def analyze_modpack(input_folder: Path, output_folder: Path, use_api: bool, comp
 
         # 1. Parsing statico
         metadata = ModMetadataParser.get_jar_metadata(jar_path)
-        side, reason = get_final_side(jar_path, metadata)
+
+        # Escludi mod Fabric-only (richiedono fabricloader/fabric-api) su server Forge
+        if metadata.get('fabric_only'):
+            side = 'client'
+            reason = f'FABRIC-ONLY: richiede Fabric Loader/API (non compatibile Forge)'
+        else:
+            side, reason = get_final_side(jar_path, metadata)
 
         # 2. Fallback API se UNKNOWN e abilitato
         if side == 'unknown' and use_api:

@@ -55,6 +55,10 @@ class ModMetadataParser:
                                 elif has_main:
                                     env = 'server'
                             metadata['side'] = env
+                            # Rileva dipendenze Fabric - se richiede fabricloader/fabric-api, NON gira su Forge
+                            depends = data.get('depends', {})
+                            if 'fabricloader' in depends or 'fabric-api' in depends:
+                                metadata['fabric_only'] = True
                     except Exception as e:
                         print(f"    [DEBUG] Errore parsing Fabric JSON in {jar_path.name}: {e}")
         except Exception as e:
