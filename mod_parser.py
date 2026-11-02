@@ -39,7 +39,22 @@ class ModMetadataParser:
                     try:
                         with z.open('fabric.mod.json') as f:
                             data = json.load(f)
-                            metadata['side'] = data.get('environment', 'both')
+                            env = data.get('environment', 'both')
+                            # environment "*" = both
+                            if env == '*':
+                                env = 'both'
+                            # Se environment non specificato, controlla entrypoints
+                            if env == 'both' or env == 'unknown':
+                                entrypoints = data.get('entrypoints', {})
+                                has_client = 'client' in entrypoints
+                                has_main = 'main' in entrypoints
+                                if has_client and has_main:
+                                    env = 'both'
+                                elif has_client:
+                                    env = 'client'
+                                elif has_main:
+                                    env = 'server'
+                            metadata['side'] = env
                     except Exception as e:
                         print(f"    [DEBUG] Errore parsing Fabric JSON in {jar_path.name}: {e}")
         except Exception as e:
