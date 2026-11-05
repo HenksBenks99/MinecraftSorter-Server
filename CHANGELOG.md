@@ -5,11 +5,13 @@ Tutti i cambiamenti importanti per questo progetto sono documentati in questo fi
 ## [Unreleased] - 2026-11-05
 
 ### Nuova interfaccia grafica (`gui.py`)
-- **Interfaccia a passi** (Preparazione → Analisi → Risultati), solo `tkinter`, tema chiaro/scuro automatico
-- **Risultati**: schede riepilogo cliccabili come filtri (Tutte / Server-ready / Solo client / Da verificare), ricerca e tabella
-- **Chiave API CurseForge inseribile dalla GUI** con indicatore di stato (non inserita / in verifica / valida / non valida / non verificabile)
-- Avanzamento reale, validazione dei dati prima dell'analisi, ricordo delle ultime cartelle usate
-- Aggiunti `run_cli.py` / `run_cli.bat` (launcher CLI che gestisce i percorsi con spazi)
+- **Grafica identica al design** (`UI/*.png`): finestra senza cornice di sistema, widget arrotondati, font Segoe UI Variable, icone Segoe Fluent, tema scuro/chiaro con pulsante luna/sole (segue il tema di Windows al primo avvio, poi ricorda la scelta)
+- **Pagina principale**: Mod Folder, Server Pack Folder, Compare Folders, *Check mod online*, *Preview Only*, pulsanti *Scan Mod Differences*, *Generate Mod List*, *Start Analysis*
+- **Advanced Settings** (icona chiave inglese): chiave API CurseForge con Paste / Retry e stato della verifica, *Check for Unknown Mods online*, *Manual Override Unknown Mods*
+- **Manual Override**: elenco delle mod incerte (colonne Modname / Confidence / ModType) da selezionare a mano; le scelte vengono copiate nel server pack e il report JSON si aggiorna
+- **Mod Analysis Report**: confronto tra due cartelle e *Generate Mod List* (con rilevamento di mod duplicate), con Copy to clipboard e Save report (TXT/JSON)
+- **Risultati**: schede riepilogo cliccabili come filtri, ricerca e tabella; avanzamento reale e validazione dei dati prima dell'analisi
+- Aggiunti `run_cli.py` / `run_cli.bat` (launcher CLI che gestisce i percorsi con spazi) e `test_gui.py` (test della logica)
 - La logica di analisi (`separate_mods.py`, `mod_parser.py`) è invariata
 
 ### Sicurezza
