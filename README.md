@@ -58,6 +58,17 @@ Mod Client-Only ignorate: 12
 Mod da verificare: 0
 ```
 
+## 🪟 Interfaccia Grafica
+
+```bash
+python gui.py
+```
+
+Scegli la cartella delle mod e la destinazione, poi premi **Analizza modpack**. Opzioni:
+
+- **Solo anteprima**: analizza senza copiare nessun file
+- **Opzioni avanzate**: controllo online delle mod sconosciute, **chiave API CurseForge** (con indicatore di stato) e cartella di confronto
+
 ## 🖥️ Creazione Eseguibili (.exe)
 
 Per creare eseguibili standalone per CLI e GUI (richiede [PyInstaller](https://pyinstaller.org/)):
@@ -102,6 +113,8 @@ set CURSEFORGE_API_KEY=tua_chiave
 export CURSEFORGE_API_KEY=tua_chiave
 ```
 
+In alternativa, nella GUI (**Opzioni avanzate**) puoi incollare la chiave nel campo dedicato: viene verificata subito (indicatore: non inserita / valida / non valida) e salvata **solo sul tuo PC**, in `~/.forgemodsearch_gui.json`, mai nel repository.
+
 > **Nota**: Il programma funziona **senza API key**. La key serve solo come fallback online per mod non classificate staticamente (`UNKNOWN`). Con l'override map attuale, `UNKNOWN` = 0.
 
 ---
@@ -109,13 +122,15 @@ export CURSEFORGE_API_KEY=tua_chiave
 ## 📂 Struttura Progetto
 
 ```
-mod-server-sorter/
+MinecraftSorter-Server/
 ├── .gitignore              # Protegge config.py, cache, mods/
 ├── CHANGELOG.md            # Storico versioni
 ├── config.py               # Config centralizzata (API key SOLO env var)
+├── gui.py                  # Interfaccia grafica (tkinter)
 ├── mod_parser.py           # Parser metadati JAR (Forge/Fabric)
 ├── README.md               # Questo file
-├── separate_mods.py        # Entry point principale (~70 linee)
+├── run_cli.py / run_cli.bat # Launcher CLI (gestisce percorsi con spazi)
+├── separate_mods.py        # Entry point principale (CLI)
 ├── MODRINTH_INTEGRATION.md # Doc API Modrinth (storico)
 └── mods/                   # Tue mod (non versionate)
     ├── mods-corrected/     # Input: modpack da analizzare

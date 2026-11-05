@@ -2,6 +2,21 @@
 
 Tutti i cambiamenti importanti per questo progetto sono documentati in questo file.
 
+## [Unreleased] - 2026-11-05
+
+### Nuova interfaccia grafica (`gui.py`)
+- **Interfaccia a passi** (Preparazione → Analisi → Risultati), solo `tkinter`, tema chiaro/scuro automatico
+- **Risultati**: schede riepilogo cliccabili come filtri (Tutte / Server-ready / Solo client / Da verificare), ricerca e tabella
+- **Chiave API CurseForge inseribile dalla GUI** con indicatore di stato (non inserita / in verifica / valida / non valida / non verificabile)
+- Avanzamento reale, validazione dei dati prima dell'analisi, ricordo delle ultime cartelle usate
+- Aggiunti `run_cli.py` / `run_cli.bat` (launcher CLI che gestisce i percorsi con spazi)
+- La logica di analisi (`separate_mods.py`, `mod_parser.py`) è invariata
+
+### Sicurezza
+- La chiave inserita nella GUI è salvata **solo sul PC dell'utente** (`~/.forgemodsearch_gui.json`), mai nel repository né nell'eseguibile
+
+---
+
 ## [4.0.0] - 2026-11-02
 
 ### Refactor Completo (Breaking: nuovo entry point)
